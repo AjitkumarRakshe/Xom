@@ -1,3 +1,5 @@
+{{config(materialized='incremental') }}
+
 SELECT 
 cast(_id as string) as UNIQUE_ID,
 cast(_id as string) as _ID
@@ -118,4 +120,12 @@ cast(_id as string) as _ID
 ,cast(JSON_EXTRACT(carbon_offset ,"$.selected_organization") as string ) as CARBON_OFFSET_SELECTED_ORGANIZATION
 ,cast(staff_pod as string) as STAFF_POD
 ,_FIVETRAN_SYNCED as _FIVETRAN_SYNCED
-From xomgcp.Xom_dataset.Orders
+From xomgcp.Xom_dataset.Order_incremental
+
+{% if is_incremental() %}
+
+  -- this filter will only be applied on an incremental run
+  where _constructed >= (select max(_constructed) from {{ this }})
+
+{% endif %}
+
